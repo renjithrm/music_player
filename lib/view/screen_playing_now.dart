@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:assets_audio_player/assets_audio_player.dart';
+
 import 'package:flutter/material.dart';
 
 class ScreenPlayingNow extends StatefulWidget {
@@ -10,8 +12,40 @@ class ScreenPlayingNow extends StatefulWidget {
 }
 
 class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
+  AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
+  late bool isPlay;
+  @override
+  void initState() {
+    initPlaySong();
+    isPlay = true;
+    super.initState();
+  }
+
+  Future<void> initPlaySong() async {
+    await assetsAudioPlayer.open(Audio("assets/Alan_Walker_Alone.mp3"),
+        showNotification: true,
+        notificationSettings: NotificationSettings(
+            playPauseEnabled: true,
+            customPlayPauseAction: (asset) {
+              if (isPlay) {
+                pauseSong();
+                setState(() {
+                  isPlay = false;
+                });
+              } else if (!isPlay) {
+                playSong();
+                setState(() {
+                  isPlay = true;
+                });
+              }
+            }));
+  }
+
+  late var songTime;
   @override
   Widget build(BuildContext context) {
+    final Duration songDuration = assetsAudioPlayer.current.value as Duration;
+    bool isPlaying = assetsAudioPlayer.isPlaying.value;
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -105,8 +139,9 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   data:
                       SliderThemeData(thumbShape: SliderComponentShape.noThumb),
                   child: Slider(
-                    value: 2,
+                    value: 3,
                     onChanged: (value) {},
+                    min: 0,
                     max: 5,
                     thumbColor: Colors.white,
                     activeColor: Colors.purple,
@@ -117,15 +152,24 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        "1:00",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      PlayerBuilder.currentPosition(
+                          player: assetsAudioPlayer,
+                          builder: (context, duration) {
+                            var songTime =
+                                getTimeString(duration.inMilliseconds);
+                            setState(() {
+                              songTime = songTime;
+                            });
+                            return Text(
+                              songTime,
+                              style: TextStyle(color: Colors.white),
+                            );
+                          }),
                       SizedBox(
                         width: 270,
                       ),
                       Text(
-                        "3:00",
+                        "3:0",
                         style: TextStyle(color: Colors.white),
                       )
                     ],
@@ -174,9 +218,21 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                           width: 20,
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            if (assetsAudioPlayer.isPlaying.value) {
+                              pauseSong();
+                              setState(() {
+                                isPlay = false;
+                              });
+                            } else if (!assetsAudioPlayer.isPlaying.value) {
+                              playSong();
+                              setState(() {
+                                isPlay = true;
+                              });
+                            }
+                          },
                           icon: Icon(
-                            Icons.pause_circle_outline_outlined,
+                            isPlay ? Icons.pause : Icons.play_arrow,
                             color: Colors.white,
                             size: 50,
                           ),
@@ -202,5 +258,22 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
         ),
       ),
     );
+  }
+
+  Future<void> playSong() async {
+    await assetsAudioPlayer.play();
+  }
+
+  pauseSong() async {
+    await assetsAudioPlayer.pause();
+  }
+
+  String getTimeString(int milliseconds) {
+    if (milliseconds == null) milliseconds = 0;
+    String minutes =
+        '${(milliseconds / 60000).floor() < 10 ? 0 : ''}${(milliseconds / 60000).floor()}';
+    String seconds =
+        '${(milliseconds / 1000).floor() % 60 < 10 ? 0 : ''}${(milliseconds / 1000).floor() % 60}';
+    return '$minutes:$seconds';
   }
 }
