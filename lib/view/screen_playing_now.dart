@@ -3,6 +3,7 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class ScreenPlayingNow extends StatefulWidget {
   ScreenPlayingNow({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class ScreenPlayingNow extends StatefulWidget {
 class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
   AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
   late bool isPlay;
+  Color favoriteIconeColor = Colors.white;
   @override
   void initState() {
     initPlaySong();
@@ -21,24 +23,69 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     super.initState();
   }
 
+  var audioList = [
+    Audio("assets/Alan_Walker_Alone.mp3",
+        metas: Metas(
+            title: "Alan_Walker_Alone",
+            artist: "Alan_Walker",
+            image: MetasImage(
+                path: "assets/song_image_1.jpg", type: ImageType.asset))),
+    Audio("assets/Alan-Walker-Faded.mp3",
+        metas: Metas(
+            title: "Alan-Walker-Faded",
+            artist: "Alan_Walker",
+            image: MetasImage(
+                path: "assets/song_image_2.jpg", type: ImageType.asset))),
+    Audio("assets/Alan_Walker_feat_Au_Ra_feat_Tomine_Harket_Darkside.mp3",
+        metas: Metas(
+            title: "Alan_Walker_feat_Au_Ra_feat_Tomine_Harket_Darkside",
+            artist: "Alan_Walker",
+            image:
+                MetasImage(path: "assets/song_3.jpg", type: ImageType.asset))),
+    Audio(
+        "assets/Alan_Walker_feat_Sabrina_Carpenter_feat_Farruko_On_My_Way.mp3",
+        metas: Metas(
+          title: "Alan_Walker_feat_Sabrina_Carpenter_feat_Farruko_On_My_Way",
+          artist: "Alan_Walker",
+          image:
+              MetasImage(path: "assets/song_4.jpg", type: ImageType.asset), //
+        )),
+    Audio("assets/K391_feat_Alan_Walker_feat_Ahrix_End_of_Time.mp3",
+        metas: Metas(
+          title: "K391_feat_Alan_Walker_feat_Ahrix_End_of_Time",
+          artist: "Alan_Walker",
+          image: MetasImage(path: "assets/song_5.jpg", type: ImageType.asset),
+        ))
+  ];
   Future<void> initPlaySong() async {
-    await assetsAudioPlayer.open(Audio("assets/Alan_Walker_Alone.mp3"),
-        showNotification: true,
-        notificationSettings: NotificationSettings(
-            playPauseEnabled: true,
-            customPlayPauseAction: (asset) {
-              if (isPlay) {
-                pauseSong();
-                setState(() {
-                  isPlay = false;
-                });
-              } else if (!isPlay) {
-                playSong();
-                setState(() {
-                  isPlay = true;
-                });
-              }
-            }));
+    await assetsAudioPlayer.open(
+      //Audio("assets/Alan_Walker_Alone.mp3"),
+      Playlist(audios: audioList),
+      showNotification: true,
+      notificationSettings: NotificationSettings(
+        playPauseEnabled: true,
+        customPlayPauseAction: (asset) {
+          if (isPlay) {
+            pauseSong();
+            setState(() {
+              isPlay = false;
+            });
+          } else if (!isPlay) {
+            playSong();
+            setState(() {
+              isPlay = true;
+            });
+          }
+        },
+      ),
+      loopMode: LoopMode.playlist,
+    );
+  }
+
+  @override
+  void dispose() {
+    assetsAudioPlayer.dispose();
+    super.dispose();
   }
 
   @override
@@ -47,212 +94,248 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     return Scaffold(
       body: SafeArea(
         child: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-              color: Colors.black,
-              image: DecorationImage(
-                  image: AssetImage('assets/playnow_background.png'),
-                  fit: BoxFit.cover)),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                        )),
-                    Expanded(
-                      child: Text(
-                        "Now Playing",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 24),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  ],
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                Hero(
-                    tag: "myImage",
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
-                      child: Card(
-                        elevation: 8,
-                        child: Container(
-                          width: 300,
-                          height: 300,
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            image: DecorationImage(
-                                image: AssetImage('assets/heroimage.jpg'),
-                                fit: BoxFit.cover),
-                          ),
-                        ),
-                      ),
-                    )),
-                SizedBox(
-                  height: 30,
-                ),
-                SizedBox(
-                  width: 300,
-                  height: 30,
-                  // color: ReuseWidgets.scaffoldBackground,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: BoxDecoration(
+                color: Colors.black,
+                image: DecorationImage(
+                    image: AssetImage('assets/playnow_background.png'),
+                    fit: BoxFit.cover)),
+            child: assetsAudioPlayer.builderRealtimePlayingInfos(builder:
+                (BuildContext context, RealtimePlayingInfos realtimeplayer) {
+              if (realtimeplayer != null) {
+                return buildPage(realtimeplayer);
+              } else {
+                return Container(
                   child: Center(
-                    child: Text(
-                      "Title of song",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20),
-                    ),
+                    child: CircularProgressIndicator(),
                   ),
-                ),
-                SizedBox(
-                  width: 300,
-                  height: 30,
-                  // color: ReuseWidgets.scaffoldBackground,
-                  child: Center(
-                    child: Text(
-                      "Subtitle of song",
-                      style: TextStyle(
-                          color: Colors.grey[350],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: 30,
-                ),
-                SliderTheme(
-                  data:
-                      SliderThemeData(thumbShape: SliderComponentShape.noThumb),
-                  child: Slider(
-                    value: 2,
-                    onChanged: (value) {},
-                    max: 4,
-                    thumbColor: Colors.white,
-                    activeColor: Colors.purple,
-                    inactiveColor: Colors.white,
-                  ),
-                ),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      PlayerBuilder.currentPosition(
-                          player: assetsAudioPlayer,
-                          builder: (context, duration) {
-                            var songTime =
-                                getTimeString(duration.inMilliseconds);
+                );
+              }
+            })),
+      ),
+    );
+  }
 
-                            return Text(
-                              songTime,
-                              style: TextStyle(color: Colors.white),
-                            );
-                          }),
-                      SizedBox(
-                        width: 270,
-                      ),
-                      Text(
-                        "3:0",
+//====================================page builder=================
+
+  Widget buildPage(RealtimePlayingInfos realtimeplayer) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.white,
+                  )),
+              Expanded(
+                child: Text(
+                  "Now Playing",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 24),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          Hero(
+            tag: "myImage",
+            child: Container(
+              width: 270,
+              height: 270,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                    image: AssetImage(
+                        realtimeplayer.current!.audio.audio.metas.image!.path),
+                    fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          SizedBox(
+            width: 300,
+            height: 30,
+            // color: ReuseWidgets.scaffoldBackground,
+            child: Center(
+              child: Text(
+                realtimeplayer.current!.audio.audio.metas.title.toString(),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          SizedBox(
+            width: 300,
+            height: 30,
+            // color: ReuseWidgets.scaffoldBackground,
+            child: Center(
+              child: Text(
+                realtimeplayer.current!.audio.audio.metas.artist.toString(),
+                style: TextStyle(
+                    color: Colors.grey[350],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 50,
+          ),
+          Container(
+            width: 340,
+            height: 30,
+            child: LinearPercentIndicator(
+              backgroundColor: Colors.grey,
+              progressColor: Colors.white,
+              percent: realtimeplayer.currentPosition.inSeconds /
+                  realtimeplayer.duration.inSeconds,
+            ),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                PlayerBuilder.currentPosition(
+                    player: assetsAudioPlayer,
+                    builder: (context, duration) {
+                      var songTime = getTimeString(duration.inMilliseconds);
+
+                      return Text(
+                        songTime,
                         style: TextStyle(color: Colors.white),
-                      )
-                    ],
-                  ),
-                ),
+                      );
+                    }),
                 SizedBox(
-                  height: 20,
+                  width: 250,
                 ),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.favorite),
-                        color: Colors.red,
-                        onPressed: () {},
-                      ),
-                      SizedBox(
-                        width: 80,
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.playlist_add,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      )
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.skip_previous,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            if (assetsAudioPlayer.isPlaying.value) {
-                              pauseSong();
-                              setState(() {
-                                isPlay = false;
-                              });
-                            } else if (!assetsAudioPlayer.isPlaying.value) {
-                              playSong();
-                              setState(() {
-                                isPlay = true;
-                              });
-                            }
-                          },
-                          icon: Icon(
-                            isPlay ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.skip_next,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
+                Text(
+                  getTimeString(realtimeplayer.duration.inMilliseconds),
+                  style: TextStyle(color: Colors.white),
                 )
               ],
             ),
           ),
-        ),
+          SizedBox(
+            height: 20,
+          ),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.favorite,
+                    size: 30,
+                  ),
+                  color: favoriteIconeColor,
+                  onPressed: () {
+                    setState(() {
+                      favoriteIconeColor = Colors.red;
+                    });
+                  },
+                ),
+                SizedBox(
+                  width: 80,
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.playlist_add,
+                    size: 35,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {},
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: Container(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      previousSong();
+                    },
+                    icon: Icon(
+                      Icons.skip_previous,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      if (assetsAudioPlayer.isPlaying.value) {
+                        pauseSong();
+                        setState(() {
+                          isPlay = false;
+                        });
+                      } else if (!assetsAudioPlayer.isPlaying.value) {
+                        playSong();
+                        setState(() {
+                          isPlay = true;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      isPlay ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      nextSong();
+                    },
+                    icon: Icon(
+                      Icons.skip_next,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> nextSong() async {
+    await assetsAudioPlayer.next();
+  }
+
+  Future<void> previousSong() async {
+    await assetsAudioPlayer.previous();
   }
 
   Future<void> playSong() async {
