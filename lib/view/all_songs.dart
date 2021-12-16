@@ -108,7 +108,7 @@ class ScreenAllSonges extends StatelessWidget {
         ),
       ),
       onTap: () => Navigator.of(context)
-          .push(MaterialPageRoute(builder: (ctx) => ScreenPlayingNow())),
+          .push(MaterialPageRoute(builder: (context) => ScreenPlayingNow())),
     );
   }
 }

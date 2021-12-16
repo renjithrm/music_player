@@ -41,10 +41,8 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             }));
   }
 
-  late var songTime;
   @override
   Widget build(BuildContext context) {
-    final Duration songDuration = assetsAudioPlayer.current.value as Duration;
     bool isPlaying = assetsAudioPlayer.isPlaying.value;
     return Scaffold(
       body: SafeArea(
@@ -139,10 +137,9 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   data:
                       SliderThemeData(thumbShape: SliderComponentShape.noThumb),
                   child: Slider(
-                    value: 3,
+                    value: 2,
                     onChanged: (value) {},
-                    min: 0,
-                    max: 5,
+                    max: 4,
                     thumbColor: Colors.white,
                     activeColor: Colors.purple,
                     inactiveColor: Colors.white,
@@ -157,9 +154,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                           builder: (context, duration) {
                             var songTime =
                                 getTimeString(duration.inMilliseconds);
-                            setState(() {
-                              songTime = songTime;
-                            });
+
                             return Text(
                               songTime,
                               style: TextStyle(color: Colors.white),
