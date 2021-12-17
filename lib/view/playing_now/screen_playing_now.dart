@@ -3,11 +3,12 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class ScreenPlayingNow extends StatefulWidget {
-  ScreenPlayingNow({Key? key}) : super(key: key);
-
+  List<Audio> playlist;
+  int intex;
+  ScreenPlayingNow({Key? key, required this.playlist, required this.intex})
+      : super(key: key);
   @override
   State<ScreenPlayingNow> createState() => _ScreenPlayingNowState();
 }
@@ -23,44 +24,13 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     super.initState();
   }
 
-  var audioList = [
-    Audio("assets/Alan_Walker_Alone.mp3",
-        metas: Metas(
-            title: "Alan_Walker_Alone",
-            artist: "Alan_Walker",
-            image: MetasImage(
-                path: "assets/song_image_1.jpg", type: ImageType.asset))),
-    Audio("assets/Alan-Walker-Faded.mp3",
-        metas: Metas(
-            title: "Alan-Walker-Faded",
-            artist: "Alan_Walker",
-            image: MetasImage(
-                path: "assets/song_image_2.jpg", type: ImageType.asset))),
-    Audio("assets/Alan_Walker_feat_Au_Ra_feat_Tomine_Harket_Darkside.mp3",
-        metas: Metas(
-            title: "Alan_Walker_feat_Au_Ra_feat_Tomine_Harket_Darkside",
-            artist: "Alan_Walker",
-            image:
-                MetasImage(path: "assets/song_3.jpg", type: ImageType.asset))),
-    Audio(
-        "assets/Alan_Walker_feat_Sabrina_Carpenter_feat_Farruko_On_My_Way.mp3",
-        metas: Metas(
-          title: "Alan_Walker_feat_Sabrina_Carpenter_feat_Farruko_On_My_Way",
-          artist: "Alan_Walker",
-          image:
-              MetasImage(path: "assets/song_4.jpg", type: ImageType.asset), //
-        )),
-    Audio("assets/K391_feat_Alan_Walker_feat_Ahrix_End_of_Time.mp3",
-        metas: Metas(
-          title: "K391_feat_Alan_Walker_feat_Ahrix_End_of_Time",
-          artist: "Alan_Walker",
-          image: MetasImage(path: "assets/song_5.jpg", type: ImageType.asset),
-        ))
-  ];
+  double deviceHeight = 0;
+  double deviceWidth = 0;
+
   Future<void> initPlaySong() async {
     await assetsAudioPlayer.open(
-      //Audio("assets/Alan_Walker_Alone.mp3"),
-      Playlist(audios: audioList),
+      // Audio(widget.currentSongs),
+      Playlist(audios: widget.playlist, startIndex: widget.intex),
       showNotification: true,
       notificationSettings: NotificationSettings(
         playPauseEnabled: true,
@@ -88,14 +58,38 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     super.dispose();
   }
 
+  seekSongTime(value) async {
+    await assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
+  }
+
+  sliderBar(RealtimePlayingInfos realtimeplayer) {
+    return SliderTheme(
+      data: SliderThemeData(
+        thumbShape: SliderComponentShape.noThumb,
+      ),
+      child: Slider(
+        value: realtimeplayer.currentPosition.inSeconds.toDouble(),
+        max: realtimeplayer.duration.inSeconds.toDouble(),
+        onChanged: (value) {
+          setState(() {
+            seekSongTime(value);
+          });
+        },
+        inactiveColor: Colors.grey,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isPlaying = assetsAudioPlayer.isPlaying.value;
+    deviceHeight = MediaQuery.of(context).size.height;
+    deviceWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(
+        maintainBottomViewPadding: true,
         child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
+            width: deviceWidth,
+            height: deviceHeight,
             decoration: BoxDecoration(
                 color: Colors.black,
                 image: DecorationImage(
@@ -145,32 +139,29 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             ],
           ),
           SizedBox(
-            height: 30,
+            height: deviceHeight * 0.04,
           ),
-          Hero(
-            tag: "myImage",
-            child: Container(
-              width: 270,
-              height: 270,
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                    image: AssetImage(
-                        realtimeplayer.current!.audio.audio.metas.image!.path),
-                    fit: BoxFit.cover),
-              ),
+          Container(
+            width: deviceWidth * 0.7,
+            height: deviceHeight * 0.3,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                  image: AssetImage(
+                      realtimeplayer.current!.audio.audio.metas.image!.path),
+                  fit: BoxFit.cover),
             ),
           ),
           SizedBox(
             height: 30,
           ),
-          SizedBox(
-            width: 300,
-            height: 30,
-            // color: ReuseWidgets.scaffoldBackground,
+          Container(
+            width: deviceWidth * 0.8,
+            height: deviceHeight * 0.06,
             child: Center(
               child: Text(
+                // widget.playlist[widget.intex].metas.title.toString(),
                 realtimeplayer.current!.audio.audio.metas.title.toString(),
                 style: TextStyle(
                     color: Colors.white,
@@ -180,12 +171,11 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             ),
           ),
           SizedBox(
-            height: 20,
+            height: deviceHeight * 0.03,
           ),
-          SizedBox(
-            width: 300,
-            height: 30,
-            // color: ReuseWidgets.scaffoldBackground,
+          Container(
+            width: deviceWidth * 0.8,
+            height: deviceHeight * 0.06,
             child: Center(
               child: Text(
                 realtimeplayer.current!.audio.audio.metas.artist.toString(),
@@ -197,20 +187,15 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             ),
           ),
           SizedBox(
-            height: 50,
+            height: deviceHeight * 0.04,
           ),
           Container(
-            width: 340,
-            height: 30,
-            child: LinearPercentIndicator(
-              backgroundColor: Colors.grey,
-              progressColor: Colors.white,
-              percent: realtimeplayer.currentPosition.inSeconds /
-                  realtimeplayer.duration.inSeconds,
-            ),
+            width: deviceWidth * 0.9,
+            height: deviceHeight * 0.03,
+            child: sliderBar(realtimeplayer),
           ),
           SizedBox(
-            height: 10,
+            height: deviceHeight * 0.02,
           ),
           Container(
             child: Row(
@@ -227,7 +212,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                       );
                     }),
                 SizedBox(
-                  width: 250,
+                  width: deviceWidth * 0.6,
                 ),
                 Text(
                   getTimeString(realtimeplayer.duration.inMilliseconds),
@@ -237,7 +222,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             ),
           ),
           SizedBox(
-            height: 20,
+            height: deviceHeight * 0.05,
           ),
           Container(
             child: Row(

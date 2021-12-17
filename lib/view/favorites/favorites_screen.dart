@@ -100,8 +100,8 @@ class ScreenFavorites extends StatelessWidget {
           color: ReuseWidgets.colorInBody,
         ),
       ),
-      onTap: () => Navigator.of(context)
-          .push(MaterialPageRoute(builder: (ctx) => ScreenPlayingNow())),
+      // onTap: () => Navigator.of(context)
+      //     .push(MaterialPageRoute(builder: (ctx) => ScreenPlayingNow())),
     );
   }
 }
