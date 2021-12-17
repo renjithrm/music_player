@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:music_player/controller/playlist_controller.dart';
 import 'package:music_player/model/list_model.dart';
 import 'package:music_player/model/reuse_widgets.dart';
-import 'package:music_player/view/add_playlist_screen.dart';
+import 'package:music_player/view/add_playlist/add_playlist_screen.dart';
 
 class ScreenPlaylist extends StatefulWidget {
   ScreenPlaylist({Key? key}) : super(key: key);

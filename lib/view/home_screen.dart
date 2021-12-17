@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-import 'package:music_player/view/all_songs.dart';
-import 'package:music_player/view/favorites_screen.dart';
-import 'package:music_player/view/playlist_screen.dart';
-import 'package:music_player/view/screen_search.dart';
-import 'package:music_player/view/screen_settings.dart';
+import 'package:music_player/view/all_songs/all_songs.dart';
+import 'package:music_player/view/favorites/favorites_screen.dart';
+import 'package:music_player/view/playlist/playlist_screen.dart';
+import 'package:music_player/view/search/screen_search.dart';
+import 'package:music_player/view/settings/screen_settings.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
           animationCurve: Curves.easeInOut,
           animationDuration: Duration(milliseconds: 300),
           height: 60,
-          onTap: (value) => setState(() => this.intex = value),
+          onTap: (value) => setState(() => intex = value),
         ),
       ),
     );
