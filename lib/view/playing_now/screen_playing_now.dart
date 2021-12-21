@@ -24,6 +24,8 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     super.initState();
   }
 
+  var musicList = [];
+
   double deviceHeight = 0;
   double deviceWidth = 0;
 
@@ -58,10 +60,12 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     super.dispose();
   }
 
+//morve forward or backward songs.
   seekSongTime(value) async {
     await assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
   }
 
+//slider in the play screen.
   sliderBar(RealtimePlayingInfos realtimeplayer) {
     return SliderTheme(
       data: SliderThemeData(
@@ -84,6 +88,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
   Widget build(BuildContext context) {
     deviceHeight = MediaQuery.of(context).size.height;
     deviceWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: SafeArea(
         maintainBottomViewPadding: true,
@@ -112,7 +117,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
   }
 
 //====================================page builder=================
-
+//main part of the page.
   Widget buildPage(RealtimePlayingInfos realtimeplayer) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -273,26 +278,30 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   SizedBox(
                     width: 20,
                   ),
-                  IconButton(
-                    onPressed: () {
-                      if (assetsAudioPlayer.isPlaying.value) {
-                        pauseSong();
-                        setState(() {
-                          isPlay = false;
-                        });
-                      } else if (!assetsAudioPlayer.isPlaying.value) {
-                        playSong();
-                        setState(() {
-                          isPlay = true;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      isPlay ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                      size: 50,
-                    ),
-                  ),
+                  StreamBuilder<Object>(
+                      stream: assetsAudioPlayer.isPlaying,
+                      builder: (context, snapshot) {
+                        return IconButton(
+                          onPressed: () {
+                            if (assetsAudioPlayer.isPlaying.value) {
+                              pauseSong();
+                              setState(() {
+                                isPlay = false;
+                              });
+                            } else if (!assetsAudioPlayer.isPlaying.value) {
+                              playSong();
+                              setState(() {
+                                isPlay = true;
+                              });
+                            }
+                          },
+                          icon: Icon(
+                            isPlay ? Icons.pause : Icons.play_arrow,
+                            color: Colors.white,
+                            size: 50,
+                          ),
+                        );
+                      }),
                   SizedBox(
                     width: 20,
                   ),
@@ -315,22 +324,27 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     );
   }
 
+//to play next song.
   Future<void> nextSong() async {
     await assetsAudioPlayer.next();
   }
 
+//to play previous song.
   Future<void> previousSong() async {
     await assetsAudioPlayer.previous();
   }
 
+//to play song.
   Future<void> playSong() async {
     await assetsAudioPlayer.play();
   }
 
+//to pause the song.
   pauseSong() async {
     await assetsAudioPlayer.pause();
   }
 
+//to convert the time into song time.
   String getTimeString(int milliseconds) {
     if (milliseconds == null) milliseconds = 0;
     String minutes =

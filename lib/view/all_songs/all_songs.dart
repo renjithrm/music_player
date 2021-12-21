@@ -4,6 +4,7 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:music_player/model/reuse_widgets.dart';
 import 'package:music_player/view/playing_now/screen_playing_now.dart';
+import 'package:get/get.dart';
 
 class ScreenAllSonges extends StatefulWidget {
   ScreenAllSonges({Key? key}) : super(key: key);
@@ -118,7 +119,12 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
         newList[intex].metas.artist.toString(),
         style: TextStyle(color: ReuseWidgets.colorInBody),
       ),
-      trailing: popupMenu(),
+      trailing: IconButton(
+          onPressed: () => dilogBox(),
+          icon: Icon(
+            Icons.more_vert_outlined,
+            color: ReuseWidgets.colorInBody,
+          )),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => ScreenPlayingNow(
                 playlist: newList,
@@ -127,42 +133,43 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
     );
   }
 
-  Widget popupMenu() {
-    return PopupMenuButton(
-      color: ReuseWidgets.popupColors,
-      elevation: 8,
-      padding: EdgeInsets.all(10),
-      itemBuilder: (ctx) => [
-        PopupMenuItem(
-            child: Column(
+//show dilog in home page.
+
+  dilogBox() {
+    return Get.defaultDialog(
+        backgroundColor: Colors.black,
+        title: "",
+        content: Column(
           children: [
-            TextButton(
+            TextButton.icon(
+                icon: Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                ),
                 onPressed: () {},
-                child: Text(
+                label: Text(
                   'Add to Favorites',
-                  style: TextStyle(color: ReuseWidgets.colorInBody),
+                  style: TextStyle(color: Colors.white),
                 )),
             divider,
-            TextButton(
+            TextButton.icon(
+                icon: Icon(
+                  Icons.playlist_add,
+                  color: Colors.white,
+                ),
                 onPressed: () {},
-                child: Text(
+                label: Text(
                   'Add to Playlist',
-                  style: TextStyle(color: ReuseWidgets.colorInBody),
+                  style: TextStyle(color: Colors.white),
                 )),
             divider,
             TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   'Cancel',
-                  style: TextStyle(color: ReuseWidgets.colorInBody),
-                ))
+                  style: TextStyle(color: Colors.white),
+                )),
           ],
-        )),
-      ],
-      icon: Icon(
-        Icons.more_vert,
-        color: ReuseWidgets.colorInBody,
-      ),
-    );
+        ));
   }
 }
