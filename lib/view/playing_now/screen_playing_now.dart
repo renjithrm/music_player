@@ -153,8 +153,9 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
               color: Colors.transparent,
               shape: BoxShape.circle,
               image: DecorationImage(
-                  image: AssetImage(
-                      realtimeplayer.current!.audio.audio.metas.image!.path),
+                  image: AssetImage("assets/heroimage.jpg")
+                  //  realtimeplayer.current!.audio.audio.metas.image!.path
+                  ,
                   fit: BoxFit.cover),
             ),
           ),

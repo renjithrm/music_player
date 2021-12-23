@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/view/home_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(AllSongsModelAdapter());
+  await Hive.openBox("songs");
   runApp(const MyApp());
 }
 

@@ -1,7 +1,9 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 // class AllSongsController extends GetxController {
@@ -45,6 +47,5 @@ class AllSongsController {
     List<SongModel> allFetchAllSongs = await onAudioQuery.querySongs();
 
     fetchSongsList.value = allFetchAllSongs;
-    print(fetchSongsList.value);
   }
 }

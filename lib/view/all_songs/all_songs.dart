@@ -33,7 +33,7 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
     // print(allSongsController.fetchSongsList);
   }
 
-  late List<Audio> songList;
+  List<Audio> songList = [];
   // var audioList = ValueNotifier([
   //   Audio("assets/Alan_Walker_Alone.mp3",
   //       metas: Metas(
@@ -170,13 +170,21 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
               color: ReuseWidgets.colorInBody,
             )),
         onTap: () {
-          newList.forEach((element) {});
-
-          // Navigator.of(context).push(MaterialPageRoute(
-          //     builder: (context) => ScreenPlayingNow(
-          //           playlist: songList,
-          //           intex: intex,
-          //         )));
+          for (var item in newList) {
+            songList.add(
+              Audio.file(item.uri.toString(),
+                  metas: Metas(
+                    title: item.title,
+                    artist: item.artist,
+                    id: item.id.toString(),
+                  )),
+            );
+          }
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ScreenPlayingNow(
+                    playlist: songList,
+                    intex: intex,
+                  )));
         });
   }
 
