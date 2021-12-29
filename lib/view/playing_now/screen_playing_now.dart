@@ -3,6 +3,7 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 
 import 'package:flutter/material.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class ScreenPlayingNow extends StatefulWidget {
   List<Audio> playlist;
@@ -17,6 +18,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
   AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
   late bool isPlay;
   Color favoriteIconeColor = Colors.white;
+
   @override
   void initState() {
     initPlaySong();
@@ -96,10 +98,13 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             width: deviceWidth,
             height: deviceHeight,
             decoration: BoxDecoration(
-                color: Colors.black,
-                image: DecorationImage(
-                    image: AssetImage('assets/playnow_background.png'),
-                    fit: BoxFit.cover)),
+                gradient: LinearGradient(
+                    colors: [Color.fromARGB(255, 75, 181, 230), Colors.black],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter)),
+            // image: DecorationImage(
+            // image: AssetImage('assets/playnow_background.png'),
+            // fit: BoxFit.cover)),
             child: assetsAudioPlayer.builderRealtimePlayingInfos(builder:
                 (BuildContext context, RealtimePlayingInfos realtimeplayer) {
               if (realtimeplayer != null) {
@@ -118,7 +123,9 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
 
 //====================================page builder=================
 //main part of the page.
-  Widget buildPage(RealtimePlayingInfos realtimeplayer) {
+  Widget buildPage(
+    RealtimePlayingInfos realtimeplayer,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -146,17 +153,28 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
           SizedBox(
             height: deviceHeight * 0.04,
           ),
-          Container(
-            width: deviceWidth * 0.7,
-            height: deviceHeight * 0.3,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                  image: AssetImage("assets/heroimage.jpg")
-                  //  realtimeplayer.current!.audio.audio.metas.image!.path
-                  ,
-                  fit: BoxFit.cover),
+          Hero(
+            tag: widget.intex,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                height: deviceHeight * 0.3,
+                width: deviceWidth * 0.9,
+                child: QueryArtworkWidget(
+                  artworkFit: BoxFit.cover,
+                  id: int.parse(
+                    realtimeplayer.current!.audio.audio.metas.id.toString(),
+                  ),
+                  type: ArtworkType.AUDIO,
+                  nullArtworkWidget: Container(
+                    decoration: BoxDecoration(),
+                    child: Image(
+                      image: AssetImage("assets/download.jpg"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
           SizedBox(
@@ -169,6 +187,8 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
               child: Text(
                 // widget.playlist[widget.intex].metas.title.toString(),
                 realtimeplayer.current!.audio.audio.metas.title.toString(),
+                textAlign: TextAlign.center,
+                maxLines: 1,
                 style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -185,10 +205,13 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
             child: Center(
               child: Text(
                 realtimeplayer.current!.audio.audio.metas.artist.toString(),
+                maxLines: 1,
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.grey[350],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15),
+                  color: Colors.grey[350],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ),
           ),
@@ -241,9 +264,9 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   ),
                   color: favoriteIconeColor,
                   onPressed: () {
-                    setState(() {
-                      favoriteIconeColor = Colors.red;
-                    });
+                    // setState(() {
+                    //   favoriteIconeColor = Colors.red;
+                    // });
                   },
                 ),
                 SizedBox(
@@ -279,6 +302,16 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   SizedBox(
                     width: 20,
                   ),
+                  // IconButton(
+                  //   icon: Icon(icons),
+                  //   onPressed: () {
+                  //     if (realtimeplayer.isPlaying) {
+                  //       pauseSong();
+                  //     } else if (!realtimeplayer.isPlaying) {
+                  //       playSong();
+                  //     }
+                  //   },
+                  // ),
                   StreamBuilder<Object>(
                       stream: assetsAudioPlayer.isPlaying,
                       builder: (context, snapshot) {

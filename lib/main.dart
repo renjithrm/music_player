@@ -3,12 +3,13 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/view/home_screen.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(AllSongsModelAdapter());
-  await Hive.openBox("songs");
+  await Hive.openBox<AllSongsModel>("songs");
   runApp(const MyApp());
 }
 

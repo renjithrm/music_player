@@ -1,9 +1,13 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:music_player/controller/all%20songs/list_all_songs.dart';
+import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
+import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
 import 'package:music_player/model/reuse_widgets.dart';
 
 import 'package:get/get.dart';
@@ -20,56 +24,30 @@ class ScreenAllSonges extends StatefulWidget {
 class _ScreenAllSongesState extends State<ScreenAllSonges> {
   final AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
   final allSongsController = AllSongsController();
+  final box = Boxes.getInstance();
+  final OnAudioQuery onAudioQuery = OnAudioQuery();
+  List<Audio> songList = [];
+  var isLording = ValueNotifier(true);
   @override
   void initState() {
+    isLording.value = true;
     fetchSongs();
-
     super.initState();
+    isLording.value = false;
   }
 
   fetchSongs() async {
-    await allSongsController.premissionStatus();
-    await allSongsController.fetchDatas();
-    // print(allSongsController.fetchSongsList);
+    if (!kIsWeb) {
+      bool permissionStatus = await onAudioQuery.permissionsStatus();
+      if (!permissionStatus) {
+        await onAudioQuery.permissionsRequest();
+        await allSongsController.fetchDatas();
+      }
+    }
   }
 
-  List<Audio> songList = [];
-  // var audioList = ValueNotifier([
-  //   Audio("assets/Alan_Walker_Alone.mp3",
-  //       metas: Metas(
-  //           title: "Alan_Walker_Alone",
-  //           artist: "Alan_Walker",
-  //           image: MetasImage(
-  //               path: "assets/song_image_1.jpg", type: ImageType.asset))),
-  //   Audio("assets/Alan-Walker-Faded.mp3",
-  //       metas: Metas(
-  //           title: "Alan-Walker-Faded",
-  //           artist: "Alan_Walker",
-  //           image: MetasImage(
-  //               path: "assets/song_image_2.jpg", type: ImageType.asset))),
-  //   Audio("assets/Alan_Walker_feat_Au_Ra_feat_Tomine_Harket_Darkside.mp3",
-  //       metas: Metas(
-  //           title: "Alan_Walker_feat_Au_Ra_feat",
-  //           artist: "Alan_Walker",
-  //           image:
-  //               MetasImage(path: "assets/song_3.jpg", type: ImageType.asset))),
-  //   Audio(
-  //       "assets/Alan_Walker_feat_Sabrina_Carpenter_feat_Farruko_On_My_Way.mp3",
-  //       metas: Metas(
-  //         title: "Alan_Walker_feat_Sabrina_Carpenter",
-  //         artist: "Alan_Walker",
-  //         image:
-  //             MetasImage(path: "assets/song_4.jpg", type: ImageType.asset), //
-  //       )),
-  //   Audio("assets/K391_feat_Alan_Walker_feat_Ahrix_End_of_Time.mp3",
-  //       metas: Metas(
-  //         title: "K391_feat_Alan_Walker",
-  //         artist: "Alan_Walker",
-  //         image: MetasImage(path: "assets/song_5.jpg", type: ImageType.asset),
-  //       ))
-  // ]);
   // late var audioList = ValueNotifier(allSongsController.fetchSongsList.value);
-  late List<SongModel> value;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,34 +78,25 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child:
-              // GetBuilder<AllSongsController>(
-              //     init: AllSongsController(),
-              //     builder: (controller) {
-              //       return ListView.separated(
-              //         itemBuilder: (context, intex) {
-              //           value = controller.fetchSongsList.cast<SongModel>();
-              //           return showBanner(
-              //               context,
-              //               controller.fetchSongsList.value.cast<SongModel>(),
-              //               intex);
-              //         },
-              //         itemCount: controller.fetchSongsList.length,
-              //         separatorBuilder: (ctx, intex) => SizedBox(height: 10),
-              //       );
-              //     }),
-              ValueListenableBuilder(
-                  valueListenable: allSongsController.fetchSongsList,
-                  builder: (BuildContext context, List<SongModel> newList,
-                      Widget? _) {
-                    return ListView.separated(
-                      itemBuilder: (context, intex) {
-                        return showBanner(context, newList, intex);
-                      },
-                      itemCount: newList.length,
-                      separatorBuilder: (ctx, intex) => SizedBox(height: 10),
-                    );
-                  }),
+          child: ValueListenableBuilder(
+              valueListenable: box.listenable(),
+              builder: (BuildContext context, Box<AllSongsModel> newList,
+                  Widget? _) {
+                if (isLording.value) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  return ListView.separated(
+                    itemBuilder: (context, intex) {
+                      final songList = newList.values.toList();
+                      return showBanner(context, songList, intex);
+                    },
+                    itemCount: newList.length,
+                    separatorBuilder: (ctx, intex) => SizedBox(height: 10),
+                  );
+                }
+              }),
         ),
       ),
     );
@@ -137,26 +106,31 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
     color: Colors.black,
   );
 
-  Widget showBanner(BuildContext context, List<SongModel> newList, int intex) {
+  Widget showBanner(
+      BuildContext context, List<AllSongsModel> newList, int intex) {
     return ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+        leading: Hero(
+          tag: intex,
           child: Container(
             width: 50,
             height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              // image: DecorationImage(
-              //     image: AssetImage(newList[intex].size.toString()),
-              //     fit: BoxFit.cover),
-            ),
-            child: Image(
-              image: AssetImage("assets/heroimage.jpg"),
+            decoration: BoxDecoration(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: QueryArtworkWidget(
+                id: newList[intex].id,
+                type: ArtworkType.AUDIO,
+                nullArtworkWidget: Image(
+                  image: AssetImage("assets/heroimage.jpg"),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           ),
         ),
         title: Text(
           newList[intex].title,
+          maxLines: 1,
           style: TextStyle(color: ReuseWidgets.colorInBody),
         ),
         subtitle: Text(
@@ -172,14 +146,17 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
         onTap: () {
           for (var item in newList) {
             songList.add(
-              Audio.file(item.uri.toString(),
-                  metas: Metas(
-                    title: item.title,
-                    artist: item.artist,
-                    id: item.id.toString(),
-                  )),
+              Audio.file(
+                item.uri.toString(),
+                metas: Metas(
+                  title: item.title,
+                  artist: item.artist,
+                  id: item.id.toString(),
+                ),
+              ),
             );
           }
+          // images(newList, intex);
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => ScreenPlayingNow(
                     playlist: songList,
@@ -226,5 +203,11 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
                 )),
           ],
         ));
+  }
+
+  images(List<AllSongsModel> newList, int intex) async {
+    final images =
+        await onAudioQuery.queryArtwork(newList[intex].id, ArtworkType.AUDIO);
+    print(images);
   }
 }

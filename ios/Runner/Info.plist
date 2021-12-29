@@ -46,6 +46,6 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>NSAppleMusicUsageDescription</key>
-	    <string>Play local audio</string>
+		<string>Play local audio</string>
 	</dict>
 </plist>
