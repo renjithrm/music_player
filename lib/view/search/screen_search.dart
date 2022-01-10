@@ -3,7 +3,7 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:music_player/controller/audio_controller.dart';
 import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
 import 'package:music_player/model/reuse_widgets.dart';
@@ -19,25 +19,30 @@ class ScreenScearch extends StatefulWidget {
 
 class _ScreenScearchState extends State<ScreenScearch> {
   final _myBox = Boxes.getInstance();
-
+  // final _allSongsController = AllSongsController();
+  final _audioController = AudioController();
   String searchItem = "";
 
-  var search = ValueNotifier(<AllSongsModel>[]);
+  var search = ValueNotifier([]);
 
   Widget divider = Divider(
     color: Colors.black,
   );
-
+  List<AllSongsModel> allSongs = [];
   List<Audio> songList = [];
 
   @override
   Widget build(BuildContext context) {
-    search.value = searchItem.isNotEmpty
-        ? _myBox.values
-            .where((element) =>
-                element.title.toLowerCase().contains(searchItem.toLowerCase()))
-            .toList()
-        : _myBox.values.toList();
+    List list = _myBox.get("allSongs");
+    allSongs = list.cast<AllSongsModel>();
+
+    search.value = searchItem.isEmpty
+        ? allSongs
+        : allSongs
+            .where((element) => element.title
+                .toLowerCase()
+                .contains(searchItem.toString().toLowerCase()))
+            .toList();
     return Scaffold(
       body: Container(
         width: MediaQuery.of(context).size.width,
@@ -78,6 +83,10 @@ class _ScreenScearchState extends State<ScreenScearch> {
                     });
                   },
                   decoration: InputDecoration(
+                    // icon: IconButton(
+                    //   onPressed: () {},
+                    //   icon: Icon(Icons.add),
+                    // ),
                     disabledBorder: InputBorder.none,
                     focusColor: Colors.white,
                     prefixIcon: Icon(
@@ -94,18 +103,26 @@ class _ScreenScearchState extends State<ScreenScearch> {
                 height: 5,
               ),
               Expanded(
-                child: ValueListenableBuilder(
-                    valueListenable: search,
-                    builder: (BuildContext context, List<AllSongsModel> result,
-                        Widget? _) {
-                      return ListView.separated(
-                          itemBuilder: (context, index) {
-                            return showBanner(context, search.value, index);
-                          },
-                          separatorBuilder: (ctx, intex) =>
-                              SizedBox(height: 10),
-                          itemCount: search.value.length);
-                    }),
+                child: search.value.isNotEmpty
+                    ? ValueListenableBuilder(
+                        valueListenable: search,
+                        builder: (BuildContext context, List<dynamic> result,
+                            Widget? _) {
+                          return ListView.separated(
+                              itemBuilder: (context, index) {
+                                return showBanner(context, result, index);
+                              },
+                              separatorBuilder: (ctx, intex) =>
+                                  SizedBox(height: 10),
+                              itemCount: search.value.length);
+                        })
+                    : Center(
+                        child: Text(
+                          "No songs",
+                          style: TextStyle(
+                              fontSize: 30, color: ReuseWidgets.colorInBody),
+                        ),
+                      ),
               )
             ],
           ),
@@ -114,63 +131,45 @@ class _ScreenScearchState extends State<ScreenScearch> {
     );
   }
 
-  Widget showBanner(
-      BuildContext context, List<AllSongsModel> result, int intex) {
+  Widget showBanner(BuildContext context, List<dynamic> result, int intex) {
     return ListTile(
-        leading: Hero(
-          tag: intex,
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: QueryArtworkWidget(
-                id: result[intex].id,
-                type: ArtworkType.AUDIO,
-                nullArtworkWidget: Image(
-                  image: AssetImage("assets/heroimage.jpg"),
-                  fit: BoxFit.cover,
-                ),
+      leading: Hero(
+        tag: intex,
+        child: Container(
+          width: 50,
+          height: 50,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: QueryArtworkWidget(
+              id: result[intex].id,
+              type: ArtworkType.AUDIO,
+              nullArtworkWidget: Image(
+                image: AssetImage("assets/heroimage.jpg"),
+                fit: BoxFit.cover,
               ),
             ),
           ),
         ),
-        title: Text(
-          result[intex].title,
-          maxLines: 1,
-          style: TextStyle(color: ReuseWidgets.colorInBody),
-        ),
-        subtitle: Text(
-          result[intex].artist.toString(),
-          style: TextStyle(color: ReuseWidgets.colorInBody),
-        ),
-        trailing: IconButton(
-            onPressed: () => dilogBox(),
-            icon: Icon(
-              Icons.more_vert_outlined,
-              color: ReuseWidgets.colorInBody,
-            )),
-        onTap: () {
-          for (var item in result) {
-            songList.add(
-              Audio.file(
-                item.uri.toString(),
-                metas: Metas(
-                  title: item.title,
-                  artist: item.artist,
-                  id: item.id.toString(),
-                ),
-              ),
-            );
-          }
-          // images(newList, intex);
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ScreenPlayingNow(
-                    playlist: songList,
-                    intex: intex,
-                  )));
-        });
+      ),
+      title: Text(
+        result[intex].title,
+        maxLines: 1,
+        style: TextStyle(color: ReuseWidgets.colorInBody),
+      ),
+      subtitle: Text(
+        result[intex].artist.toString(),
+        style: TextStyle(color: ReuseWidgets.colorInBody),
+      ),
+      onTap: () async {
+        var indx =
+            allSongs.indexWhere((element) => element.id == result[intex].id);
+        songList = _audioController.converterToAudio(allSongs);
+        await _audioController.openToPlayingScreen(songList, indx);
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => ScreenPlayingNow()),
+        );
+      },
+    );
   }
 
   dilogBox() {

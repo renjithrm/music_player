@@ -1,9 +1,9 @@
-// ignore_for_file: import_of_legacy_library_into_null_safe
+// ignore_for_file: import_of_legacy_library_into_null_safe, invalid_use_of_protected_member
 
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -37,10 +37,10 @@ class AllSongsController extends GetxController {
   final OnAudioQuery onAudioQuery = OnAudioQuery();
 
   final box = Boxes.getInstance();
-  // final hiveList = ValueNotifier<List<AllSongsModel>>([]);
+  final hiveList = ValueNotifier<List<AllSongsModel>>([]);
   List<SongModel> fetchSongsList = [];
   // late AllSongsModel hiveList;
-  List<AllSongsModel> hiveList = [];
+  // List<AllSongsModel> hiveList = [];
   premissionStatus() async {}
 
   Future fetchDatas() async {
@@ -52,7 +52,7 @@ class AllSongsController extends GetxController {
       }
     }
 
-    hiveList = fetchSongsList
+    hiveList.value = fetchSongsList
         .map((e) => AllSongsModel(
             title: e.title,
             artist: e.artist.toString(),
@@ -61,6 +61,11 @@ class AllSongsController extends GetxController {
             duration: e.duration!.toInt()))
         .toList();
 
-    await box.addAll(hiveList);
+    await box.put("allSongs", hiveList.value);
   }
+
+  // getData() async {
+  //   hiveList.value = await box.get("allSongs");
+  //   print(hiveList);
+  // }
 }

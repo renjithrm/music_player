@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:music_player/view/all_songs/all_songs.dart';
+import 'package:music_player/view/bottom_play/bottom_play.dart';
 import 'package:music_player/view/favorites/favorites_screen.dart';
 import 'package:music_player/view/playlist/playlist_screen.dart';
 import 'package:music_player/view/search/screen_search.dart';
@@ -9,7 +10,7 @@ import 'package:music_player/view/settings/screen_settings.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -52,14 +53,23 @@ class _HomeScreenState extends State<HomeScreen> {
     Colors.red,
     Colors.black,
   ];
+
   @override
   Widget build(BuildContext context) {
+    final isKeysbord = MediaQuery.of(context).viewInsets.bottom != 0;
     return Scaffold(
-      body: Container(
-        child: screens[intex],
-      ),
+      backgroundColor: Colors.transparent,
       extendBody: true,
-      backgroundColor: Colors.blue,
+      body: Stack(
+        children: [
+          screens[intex],
+          if (!isKeysbord)
+            Positioned(
+              bottom: MediaQuery.of(context).size.height * 0.1,
+              child: BottomPlay(),
+            )
+        ],
+      ),
       bottomNavigationBar: Theme(
         data: Theme.of(context)
             .copyWith(iconTheme: IconThemeData(color: buttonColors[intex])),

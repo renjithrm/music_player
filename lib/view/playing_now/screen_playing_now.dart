@@ -3,72 +3,36 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
+import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
+import 'package:music_player/model/reuse_widgets.dart';
+import 'package:music_player/view/playlist/songs_add_to_playlist.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class ScreenPlayingNow extends StatefulWidget {
-  List<Audio> playlist;
-  int intex;
-  ScreenPlayingNow({Key? key, required this.playlist, required this.intex})
-      : super(key: key);
+  ScreenPlayingNow({
+    Key? key,
+  }) : super(key: key);
   @override
   State<ScreenPlayingNow> createState() => _ScreenPlayingNowState();
 }
 
 class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
-  AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
-  late bool isPlay;
-  Color favoriteIconeColor = Colors.white;
-
-  @override
-  void initState() {
-    initPlaySong();
-    isPlay = true;
-    super.initState();
-  }
+  AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer.withId("0");
 
   var musicList = [];
 
   double deviceHeight = 0;
   double deviceWidth = 0;
-
-  Future<void> initPlaySong() async {
-    await assetsAudioPlayer.open(
-      // Audio(widget.currentSongs),
-      Playlist(audios: widget.playlist, startIndex: widget.intex),
-      showNotification: true,
-      notificationSettings: NotificationSettings(
-        playPauseEnabled: true,
-        customPlayPauseAction: (asset) {
-          if (isPlay) {
-            pauseSong();
-            setState(() {
-              isPlay = false;
-            });
-          } else if (!isPlay) {
-            playSong();
-            setState(() {
-              isPlay = true;
-            });
-          }
-        },
-      ),
-      loopMode: LoopMode.playlist,
-    );
-  }
-
-  @override
-  void dispose() {
-    assetsAudioPlayer.dispose();
-    super.dispose();
-  }
-
+  Audio? audio;
 //morve forward or backward songs.
   seekSongTime(value) async {
     await assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
   }
 
 //slider in the play screen.
-  sliderBar(RealtimePlayingInfos realtimeplayer) {
+  Widget sliderBar(RealtimePlayingInfos realtimeplayer) {
     return SliderTheme(
       data: SliderThemeData(
         thumbShape: SliderComponentShape.noThumb,
@@ -86,8 +50,20 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     );
   }
 
+  final _box = Boxes.getInstance();
+  List<AllSongsModel> allSongs = [];
+  final favorites = ValueNotifier([]);
+
   @override
   Widget build(BuildContext context) {
+    final keys = _box.keys.toList();
+    if (keys.where((element) => element == "allSongs").isNotEmpty) {
+      List list = _box.get("allSongs");
+      allSongs = list.cast<AllSongsModel>();
+    }
+    if (keys.where((element) => element == "fav").isNotEmpty) {
+      favorites.value = _box.get("fav");
+    }
     deviceHeight = MediaQuery.of(context).size.height;
     deviceWidth = MediaQuery.of(context).size.width;
 
@@ -95,37 +71,22 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
       body: SafeArea(
         maintainBottomViewPadding: true,
         child: Container(
-            width: deviceWidth,
-            height: deviceHeight,
-            decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: [Color.fromARGB(255, 75, 181, 230), Colors.black],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter)),
-            // image: DecorationImage(
-            // image: AssetImage('assets/playnow_background.png'),
-            // fit: BoxFit.cover)),
-            child: assetsAudioPlayer.builderRealtimePlayingInfos(builder:
-                (BuildContext context, RealtimePlayingInfos realtimeplayer) {
-              if (realtimeplayer != null) {
-                return buildPage(realtimeplayer);
-              } else {
-                return Container(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-            })),
+          width: deviceWidth,
+          height: deviceHeight,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [Color.fromARGB(255, 75, 181, 230), Colors.black],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter)),
+          child: buildPage(),
+        ),
       ),
     );
   }
 
 //====================================page builder=================
 //main part of the page.
-  Widget buildPage(
-    RealtimePlayingInfos realtimeplayer,
-  ) {
+  Widget buildPage() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -153,9 +114,8 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
           SizedBox(
             height: deviceHeight * 0.04,
           ),
-          Hero(
-            tag: widget.intex,
-            child: ClipRRect(
+          assetsAudioPlayer.builderCurrent(builder: (context, nowPlay) {
+            return ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Container(
                 height: deviceHeight * 0.3,
@@ -163,7 +123,7 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                 child: QueryArtworkWidget(
                   artworkFit: BoxFit.cover,
                   id: int.parse(
-                    realtimeplayer.current!.audio.audio.metas.id.toString(),
+                    nowPlay.audio.audio.metas.id.toString(),
                   ),
                   type: ArtworkType.AUDIO,
                   nullArtworkWidget: Container(
@@ -175,53 +135,61 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
           SizedBox(
             height: 30,
           ),
-          Container(
-            width: deviceWidth * 0.8,
-            height: deviceHeight * 0.06,
-            child: Center(
-              child: Text(
-                // widget.playlist[widget.intex].metas.title.toString(),
-                realtimeplayer.current!.audio.audio.metas.title.toString(),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20),
+          assetsAudioPlayer.builderRealtimePlayingInfos(
+              builder: (context, realtimeplayer) {
+            return Container(
+              width: deviceWidth * 0.8,
+              height: deviceHeight * 0.06,
+              child: Center(
+                child: Text(
+                  realtimeplayer.current!.audio.audio.metas.title.toString(),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
               ),
-            ),
-          ),
+            );
+          }),
           SizedBox(
             height: deviceHeight * 0.03,
           ),
-          Container(
-            width: deviceWidth * 0.8,
-            height: deviceHeight * 0.06,
-            child: Center(
-              child: Text(
-                realtimeplayer.current!.audio.audio.metas.artist.toString(),
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey[350],
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+          assetsAudioPlayer.builderRealtimePlayingInfos(
+              builder: (context, realtimeplayer) {
+            return Container(
+              width: deviceWidth * 0.8,
+              height: deviceHeight * 0.06,
+              child: Center(
+                child: Text(
+                  realtimeplayer.current!.audio.audio.metas.artist.toString(),
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey[350],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
           SizedBox(
             height: deviceHeight * 0.04,
           ),
           Container(
             width: deviceWidth * 0.9,
             height: deviceHeight * 0.03,
-            child: sliderBar(realtimeplayer),
+            child: assetsAudioPlayer.builderRealtimePlayingInfos(
+                builder: (context, realtimeplayer) {
+              return sliderBar(realtimeplayer);
+            }),
           ),
           SizedBox(
             height: deviceHeight * 0.02,
@@ -243,46 +211,95 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                 SizedBox(
                   width: deviceWidth * 0.6,
                 ),
-                Text(
-                  getTimeString(realtimeplayer.duration.inMilliseconds),
-                  style: TextStyle(color: Colors.white),
-                )
+                assetsAudioPlayer.builderRealtimePlayingInfos(
+                    builder: (context, realtimeplayer) {
+                  return Text(
+                    getTimeString(realtimeplayer.duration.inMilliseconds),
+                    style: TextStyle(color: Colors.white),
+                  );
+                })
               ],
             ),
           ),
           SizedBox(
             height: deviceHeight * 0.05,
           ),
-          Container(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.favorite,
-                    size: 30,
+          assetsAudioPlayer.builderRealtimePlayingInfos(
+              builder: (context, realtimeplayer) {
+            return Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ValueListenableBuilder(
+                      valueListenable: favorites,
+                      builder: (BuildContext context,
+                          List<dynamic> newFavorites, _) {
+                        return favorites.value
+                                .where((element) =>
+                                    element.id.toString() ==
+                                    realtimeplayer
+                                        .current!.audio.audio.metas.id)
+                                .isEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.favorite,
+                                  size: 30,
+                                  color: ReuseWidgets.colorInBody,
+                                ),
+                                onPressed: () async {
+                                  var id = realtimeplayer
+                                      .current!.audio.audio.metas.id;
+                                  var indx = allSongs.indexWhere(
+                                      (element) => element.id.toString() == id);
+                                  favorites.value.add(allSongs[indx]);
+                                  await _box.put("fav", favorites.value);
+                                  favorites.notifyListeners();
+                                  await snackBar(favorites.value[indx].title,
+                                      "song add to favorites");
+                                },
+                              )
+                            : IconButton(
+                                icon: Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                  size: 30,
+                                ),
+                                onPressed: () async {
+                                  var id = realtimeplayer
+                                      .current!.audio.audio.metas.id;
+                                  var indx = allSongs.indexWhere(
+                                      (element) => element.id.toString() == id);
+
+                                  favorites.value.removeWhere(
+                                      (element) => element.id.toString() == id);
+
+                                  await _box.put("fav", favorites.value);
+                                  favorites.notifyListeners();
+                                  await snackBar(favorites.value[indx].title,
+                                      "song remove from favorites");
+                                },
+                              );
+                      }),
+                  SizedBox(
+                    width: 80,
                   ),
-                  color: favoriteIconeColor,
-                  onPressed: () {
-                    // setState(() {
-                    //   favoriteIconeColor = Colors.red;
-                    // });
-                  },
-                ),
-                SizedBox(
-                  width: 80,
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.playlist_add,
-                    size: 35,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {},
-                )
-              ],
-            ),
-          ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.playlist_add,
+                      size: 35,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      var id = realtimeplayer.current!.audio.audio.metas.id;
+                      var indx = allSongs
+                          .indexWhere((element) => element.id.toString() == id);
+                      Get.bottomSheet(SongsAddToPlaylist(index: indx));
+                    },
+                  )
+                ],
+              ),
+            );
+          }),
           Expanded(
             child: Container(
               child: Row(
@@ -290,8 +307,8 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    onPressed: () {
-                      previousSong();
+                    onPressed: () async {
+                      await previousSong();
                     },
                     icon: Icon(
                       Icons.skip_previous,
@@ -302,46 +319,35 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
                   SizedBox(
                     width: 20,
                   ),
-                  // IconButton(
-                  //   icon: Icon(icons),
-                  //   onPressed: () {
-                  //     if (realtimeplayer.isPlaying) {
-                  //       pauseSong();
-                  //     } else if (!realtimeplayer.isPlaying) {
-                  //       playSong();
-                  //     }
-                  //   },
-                  // ),
-                  StreamBuilder<Object>(
-                      stream: assetsAudioPlayer.isPlaying,
-                      builder: (context, snapshot) {
-                        return IconButton(
-                          onPressed: () {
-                            if (assetsAudioPlayer.isPlaying.value) {
-                              pauseSong();
-                              setState(() {
-                                isPlay = false;
-                              });
-                            } else if (!assetsAudioPlayer.isPlaying.value) {
-                              playSong();
-                              setState(() {
-                                isPlay = true;
-                              });
-                            }
-                          },
-                          icon: Icon(
-                            isPlay ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 50,
-                          ),
-                        );
-                      }),
+                  assetsAudioPlayer.builderIsPlaying(
+                      builder: (context, isPlay) {
+                    return isPlay
+                        ? IconButton(
+                            onPressed: () async {
+                              await assetsAudioPlayer.playOrPause();
+                            },
+                            icon: Icon(
+                              Icons.pause,
+                              color: Colors.white,
+                              size: 50,
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () async {
+                              await assetsAudioPlayer.playOrPause();
+                            },
+                            icon: Icon(
+                              Icons.play_arrow,
+                              color: Colors.white,
+                              size: 50,
+                            ));
+                  }),
                   SizedBox(
                     width: 20,
                   ),
                   IconButton(
-                    onPressed: () {
-                      nextSong();
+                    onPressed: () async {
+                      await nextSong();
                     },
                     icon: Icon(
                       Icons.skip_next,
@@ -386,5 +392,10 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
     String seconds =
         '${(milliseconds / 1000).floor() % 60 < 10 ? 0 : ''}${(milliseconds / 1000).floor() % 60}';
     return '$minutes:$seconds';
+  }
+
+  snackBar(String title, String message) {
+    Get.snackbar(title, message,
+        colorText: ReuseWidgets.colorInBody, duration: Duration(seconds: 1));
   }
 }
