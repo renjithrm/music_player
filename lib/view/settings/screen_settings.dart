@@ -55,11 +55,31 @@ class ScreenSettings extends StatelessWidget {
                           valueSwich.value = value;
                           NotificationUser.saveNotification(valueSwich.value);
                         },
-                        activeTrackColor: Colors.purple,
+                        activeTrackColor: Colors.white,
                         thumbColor: MaterialStateProperty.all(Colors.white),
                         inactiveThumbColor: Colors.black,
                       );
                     }),
+              ),
+              ListTile(
+                title: Text(
+                  "Privacy",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () {},
+              ),
+              ListTile(
+                title: Text(
+                  "Terms and condition",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: () {},
               ),
               ListTile(
                 title: Text(

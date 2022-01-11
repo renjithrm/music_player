@@ -13,7 +13,7 @@ class BottomPlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return _assetsAudioPlayer.builderCurrent(builder: (context, curPlay) {
       return Container(
-        width: MediaQuery.of(context).size.width,
+        width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
             color: Colors.white54, borderRadius: BorderRadius.circular(20)),
         height: 70,
@@ -52,7 +52,7 @@ class BottomPlay extends StatelessWidget {
                     width: 5,
                   ),
                   Container(
-                    width: 150,
+                    width: 115,
                     child: Text(
                       curPlay.audio.audio.metas.title.toString(),
                       maxLines: 1,
@@ -60,6 +60,10 @@ class BottomPlay extends StatelessWidget {
                       textAlign: TextAlign.left,
                     ),
                   ),
+                  _assetsAudioPlayer.builderCurrentPosition(
+                      builder: (context, duration) {
+                    return Text(getTimeString(duration.inMilliseconds));
+                  })
                 ],
               ),
             ),
@@ -104,5 +108,14 @@ class BottomPlay extends StatelessWidget {
         ),
       );
     });
+  }
+
+  String getTimeString(int milliseconds) {
+    if (milliseconds == null) milliseconds = 0;
+    String minutes =
+        '${(milliseconds / 60000).floor() < 10 ? 0 : ''}${(milliseconds / 60000).floor()}';
+    String seconds =
+        '${(milliseconds / 1000).floor() % 60 < 10 ? 0 : ''}${(milliseconds / 1000).floor() % 60}';
+    return '$minutes:$seconds';
   }
 }

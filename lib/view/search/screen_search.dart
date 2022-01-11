@@ -39,9 +39,8 @@ class _ScreenScearchState extends State<ScreenScearch> {
     search.value = searchItem.isEmpty
         ? allSongs
         : allSongs
-            .where((element) => element.title
-                .toLowerCase()
-                .contains(searchItem.toString().toLowerCase()))
+            .where((element) =>
+                element.title.toLowerCase().contains(searchItem.toLowerCase()))
             .toList();
     return Scaffold(
       body: Container(
@@ -165,7 +164,7 @@ class _ScreenScearchState extends State<ScreenScearch> {
             allSongs.indexWhere((element) => element.id == result[intex].id);
         songList = _audioController.converterToAudio(allSongs);
         await _audioController.openToPlayingScreen(songList, indx);
-        Navigator.of(context).push(
+        await Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => ScreenPlayingNow()),
         );
       },

@@ -61,10 +61,11 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       extendBody: true,
       body: Stack(
-        children: [
+        children: <Widget>[
           screens[intex],
           if (!isKeysbord)
             Positioned(
+              left: MediaQuery.of(context).size.width * 0.05,
               bottom: MediaQuery.of(context).size.height * 0.1,
               child: BottomPlay(),
             )
