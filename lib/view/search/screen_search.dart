@@ -3,6 +3,7 @@
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:music_player/controller/all%20songs/list_all_songs.dart';
 import 'package:music_player/controller/audio_controller.dart';
 import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
@@ -21,8 +22,8 @@ class _ScreenScearchState extends State<ScreenScearch> {
   final _myBox = Boxes.getInstance();
   // final _allSongsController = AllSongsController();
   final _audioController = AudioController();
-  String searchItem = "";
-
+  // String searchItem = "";
+  final _allSongController = Get.find<AllSongsController>();
   var search = ValueNotifier([]);
 
   Widget divider = Divider(
@@ -36,12 +37,6 @@ class _ScreenScearchState extends State<ScreenScearch> {
     List list = _myBox.get("allSongs");
     allSongs = list.cast<AllSongsModel>();
 
-    search.value = searchItem.isEmpty
-        ? allSongs
-        : allSongs
-            .where((element) =>
-                element.title.toLowerCase().contains(searchItem.toLowerCase()))
-            .toList();
     return Scaffold(
       body: Container(
         width: MediaQuery.of(context).size.width,
@@ -77,15 +72,10 @@ class _ScreenScearchState extends State<ScreenScearch> {
                     borderRadius: BorderRadius.circular(10)),
                 child: TextFormField(
                   onChanged: (value) {
-                    setState(() {
-                      searchItem = value;
-                    });
+                    _allSongController.searchItem = value;
+                    _allSongController.update(["search"]);
                   },
                   decoration: InputDecoration(
-                    // icon: IconButton(
-                    //   onPressed: () {},
-                    //   icon: Icon(Icons.add),
-                    // ),
                     disabledBorder: InputBorder.none,
                     focusColor: Colors.white,
                     prefixIcon: Icon(
@@ -102,27 +92,36 @@ class _ScreenScearchState extends State<ScreenScearch> {
                 height: 5,
               ),
               Expanded(
-                child: search.value.isNotEmpty
-                    ? ValueListenableBuilder(
-                        valueListenable: search,
-                        builder: (BuildContext context, List<dynamic> result,
-                            Widget? _) {
-                          return ListView.separated(
-                              itemBuilder: (context, index) {
-                                return showBanner(context, result, index);
-                              },
-                              separatorBuilder: (ctx, intex) =>
-                                  SizedBox(height: 10),
-                              itemCount: search.value.length);
-                        })
-                    : Center(
-                        child: Text(
-                          "No songs",
-                          style: TextStyle(
-                              fontSize: 30, color: ReuseWidgets.colorInBody),
-                        ),
-                      ),
-              )
+                  child: GetBuilder<AllSongsController>(
+                      id: "search",
+                      builder: (_) {
+                        search.value = _allSongController.searchItem.isEmpty
+                            ? allSongs
+                            : allSongs
+                                .where((element) => element.title
+                                    .toLowerCase()
+                                    .contains(_allSongController.searchItem
+                                        .toLowerCase()))
+                                .toList();
+                        return search.value.isNotEmpty
+                            ? ListView.separated(
+                                itemBuilder: (context, index) {
+                                  final result =
+                                      search.value.cast<AllSongsModel>();
+                                  return showBanner(context, result, index);
+                                },
+                                separatorBuilder: (ctx, intex) =>
+                                    SizedBox(height: 10),
+                                itemCount: search.value.length)
+                            : Center(
+                                child: Text(
+                                  "No songs",
+                                  style: TextStyle(
+                                      fontSize: 30,
+                                      color: ReuseWidgets.colorInBody),
+                                ),
+                              );
+                      }))
             ],
           ),
         ),
@@ -130,7 +129,8 @@ class _ScreenScearchState extends State<ScreenScearch> {
     );
   }
 
-  Widget showBanner(BuildContext context, List<dynamic> result, int intex) {
+  Widget showBanner(
+      BuildContext context, List<AllSongsModel> result, int intex) {
     return ListTile(
       leading: Hero(
         tag: intex,

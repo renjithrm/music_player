@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:music_player/controller/all%20songs/list_all_songs.dart';
 import 'package:music_player/view/all_songs/all_songs.dart';
 import 'package:music_player/view/bottom_play/bottom_play.dart';
 import 'package:music_player/view/favorites/favorites_screen.dart';
@@ -27,8 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Icon(
       Icons.home,
     ),
-    Icon(Icons.library_music),
-    Icon(Icons.settings),
+    Icon(
+      Icons.library_music,
+    ),
+    Icon(
+      Icons.settings,
+    ),
   ];
 
   final screens = [
@@ -45,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Colors.black,
     Colors.grey,
   ];
-  int intex = 2;
+
   final buttonColors = [
     Colors.red,
     Colors.black,
@@ -60,31 +66,45 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
-      body: Stack(
-        children: <Widget>[
-          screens[intex],
-          if (!isKeysbord)
-            Positioned(
-              left: MediaQuery.of(context).size.width * 0.05,
-              bottom: MediaQuery.of(context).size.height * 0.1,
-              child: BottomPlay(),
-            )
-        ],
+      body: GetX<AllSongsController>(
+        init: AllSongsController(),
+        builder: (_screenController) {
+          return Stack(
+            children: <Widget>[
+              screens[_screenController.index.value],
+              if (!isKeysbord)
+                Positioned(
+                  left: MediaQuery.of(context).size.width * 0.05,
+                  bottom: MediaQuery.of(context).size.height * 0.1,
+                  child: BottomPlay(),
+                )
+            ],
+          );
+        },
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context)
-            .copyWith(iconTheme: IconThemeData(color: buttonColors[intex])),
-        child: CurvedNavigationBar(
-          items: items,
-          index: intex,
-          backgroundColor: Colors.transparent,
-          color: buttonbgColors[intex],
-          buttonBackgroundColor: buttonbgColors[intex],
-          animationCurve: Curves.easeInOut,
-          animationDuration: Duration(milliseconds: 300),
-          height: 60,
-          onTap: (value) => setState(() => intex = value),
-        ),
+      bottomNavigationBar: GetX<AllSongsController>(
+        init: AllSongsController(),
+        builder: (_bottomController) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+                iconTheme: IconThemeData(
+                    color: buttonColors[_bottomController.index.value])),
+            child: CurvedNavigationBar(
+              items: items,
+              index: _bottomController.index.value,
+              backgroundColor: Colors.transparent,
+              color: buttonbgColors[_bottomController.index.value],
+              buttonBackgroundColor:
+                  buttonbgColors[_bottomController.index.value],
+              animationCurve: Curves.easeInOut,
+              animationDuration: Duration(milliseconds: 300),
+              height: 60,
+              onTap: (value) {
+                _bottomController.index.value = value;
+              },
+            ),
+          );
+        },
       ),
     );
   }

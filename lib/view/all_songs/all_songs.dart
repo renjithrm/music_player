@@ -31,29 +31,7 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
   final allSongs = ValueNotifier(<AllSongsModel>[]);
   final favorites = ValueNotifier([]);
   var isLording = ValueNotifier(true);
-  // @override
-  // void initState() {
-  //   fetchSongs();
-  //   super.initState();
-  // }
-
-  // fetchSongs() async {
-  //   isLording.value = false;
-  //   List _keys = box.keys.toList();
-  //   if (!kIsWeb) {
-  //     bool permissionStatus = await onAudioQuery.permissionsStatus();
-  //     if (!permissionStatus) {
-  //       await onAudioQuery.permissionsRequest();
-  //       await allSongsController.fetchDatas();
-  //     } else {
-  //       if (_keys.where((element) => element == "allSongs").isNotEmpty) {
-  //         List list = box.get("allSongs");
-  //         allSongs.value = list.cast<AllSongsModel>();
-  //       }
-  //     }
-  //   }
-  // }
-
+  final _allSongController = Get.put(AllSongsController());
   @override
   Widget build(BuildContext context) {
     isLording.value = false;
@@ -65,7 +43,7 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
     if (_keys.where((element) => element == "fav").isNotEmpty) {
       favorites.value = box.get("fav");
     }
-    // allSongs.value = box.get("allSongs");
+
     return Scaffold(
       appBar: AppBar(
         title: ReuseWidgets.title,
@@ -94,23 +72,35 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: ValueListenableBuilder(
-              valueListenable: allSongs,
-              builder: (BuildContext context, List<AllSongsModel> newList,
-                  Widget? _) {
-                if (isLording.value) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  return ListView.separated(
-                    itemBuilder: (context, intex) {
-                      return showBanner(context, newList, intex);
-                    },
-                    itemCount: newList.length,
-                    separatorBuilder: (ctx, intex) => SizedBox(height: 10),
-                  );
-                }
+          // child: ValueListenableBuilder(
+          //     valueListenable: allSongs,
+          //     builder: (BuildContext context, List<AllSongsModel> newList,
+          //         Widget? _) {
+          //       if (isLording.value) {
+          //         return Center(
+          //           child: CircularProgressIndicator(),
+          //         );
+          //       } else {
+          //         return ListView.separated(
+          //           itemBuilder: (context, intex) {
+          //             return showBanner(context, newList, intex);
+          //           },
+          //           itemCount: newList.length,
+          //           separatorBuilder: (ctx, intex) => SizedBox(height: 10),
+          //         );
+          //       }
+          //     }),
+          child: GetBuilder<AllSongsController>(
+              id: "home",
+              builder: (_) {
+                return ListView.separated(
+                  itemBuilder: (context, intex) {
+                    return showBanner(
+                        context, _allSongController.hiveList, intex);
+                  },
+                  itemCount: _allSongController.hiveList.length,
+                  separatorBuilder: (ctx, intex) => SizedBox(height: 10),
+                );
               }),
         ),
       ),
@@ -160,7 +150,7 @@ class _ScreenAllSongesState extends State<ScreenAllSonges> {
             )),
         onTap: () async {
           try {
-            songList = await _audioController.converterToAudio(newList);
+            songList = _audioController.converterToAudio(newList);
             await _audioController.openToPlayingScreen(songList, intex);
             Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => ScreenPlayingNow()),

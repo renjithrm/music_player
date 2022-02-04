@@ -4,6 +4,7 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:music_player/controller/all%20songs/list_all_songs.dart';
 import 'package:music_player/data%20base/data%20base%20model/all_songs_model.dart';
 import 'package:music_player/data%20base/hive%20instance/hive_instance.dart';
 import 'package:music_player/model/reuse_widgets.dart';
@@ -26,27 +27,28 @@ class _ScreenPlayingNowState extends State<ScreenPlayingNow> {
   double deviceHeight = 0;
   double deviceWidth = 0;
   Audio? audio;
-//morve forward or backward songs.
-  seekSongTime(value) async {
-    await assetsAudioPlayer.seek(Duration(seconds: value.toInt()));
-  }
+//move forward or backward songs.
 
 //slider in the play screen.
   Widget sliderBar(RealtimePlayingInfos realtimeplayer) {
-    return SliderTheme(
-      data: SliderThemeData(
-        thumbShape: SliderComponentShape.noThumb,
-      ),
-      child: Slider(
-        value: realtimeplayer.currentPosition.inSeconds.toDouble(),
-        max: realtimeplayer.duration.inSeconds.toDouble(),
-        onChanged: (value) {
-          setState(() {
-            seekSongTime(value);
-          });
-        },
-        inactiveColor: Colors.grey,
-      ),
+    return GetBuilder<AllSongsController>(
+      init: AllSongsController(),
+      initState: (_) {},
+      builder: (_) {
+        return SliderTheme(
+          data: SliderThemeData(
+            thumbShape: SliderComponentShape.noThumb,
+          ),
+          child: Slider(
+            value: realtimeplayer.currentPosition.inSeconds.toDouble(),
+            max: realtimeplayer.duration.inSeconds.toDouble(),
+            onChanged: (value) {
+              Get.find<AllSongsController>().seekSongTime(value);
+            },
+            inactiveColor: Colors.grey,
+          ),
+        );
+      },
     );
   }
 
